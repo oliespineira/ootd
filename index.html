@@ -1609,13 +1609,39 @@
   }
 
   // Smooth scroll for CTA form
-  document.querySelector('.cta-form button')?.addEventListener('click', () => {
-    const email = document.querySelector('.cta-input').value;
-    if (email && email.includes('@')) {
-      const btn = document.querySelector('.cta-form button');
-      btn.textContent = '✓ You\'re on the list!';
-      btn.style.background = '#22C55E';
+  document.querySelector('.cta-form button')?.addEventListener('click', async () => {
+    const input = document.querySelector('.cta-input');
+    const email = input?.value?.trim() || '';
+    const btn = document.querySelector('.cta-form button');
+
+    if (!email || !email.includes('@')) {
+      if (input) input.focus();
+      return;
+    }
+
+    if (btn) {
       btn.disabled = true;
+      btn.textContent = 'Joining...';
+    }
+
+    try {
+      const resp = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, source: 'landing' })
+      });
+
+      if (!resp.ok) throw new Error('request_failed');
+
+      if (btn) {
+        btn.textContent = '✓ You\'re on the list!';
+        btn.style.background = '#22C55E';
+      }
+    } catch (_e) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Try again';
+      }
     }
   });
 </script>
